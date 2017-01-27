@@ -1,6 +1,6 @@
 {
   "name": "wait-for-dependencies",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Manages dependency waiting with cycle detection",
   "main": "dist/lib/WaitFor.js",
   "types": "dist/lib/WaitFor.d.ts",

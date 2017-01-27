@@ -1,4 +1,4 @@
-# @stugotech/wait-for-dependencies
+# wait-for-dependencies
 
 This library provides a class which can be used to wait on dependencies, with
 automatic cycle detection.
@@ -7,12 +7,12 @@ automatic cycle detection.
 
 Install:
 
-    $ npm install --save @stugotech/wait-for-dependencies
+    $ npm install --save wait-for-dependencies
 
 Import and instantiate:
 
 ```js
-import WaitFor from '@stugotech/wait-for-dependencies';
+import WaitFor from 'wait-for-dependencies';
 
 const w = new WaitFor<Function>();
 
