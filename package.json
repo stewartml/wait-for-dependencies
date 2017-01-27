@@ -1,0 +1,41 @@
+{
+  "name": "wait-for-dependencies",
+  "version": "1.0.0",
+  "description": "Manages dependency waiting with cycle detection",
+  "main": "dist/lib/WaitFor.js",
+  "types": "dist/lib/WaitFor.d.ts",
+  "scripts": {
+    "test": "ava dist/test/**/*.js",
+    "prepublish": "grunt"
+  },
+  "author": "Stewart Mackenzie-Leigh",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^6.0.58",
+    "ava": "^0.17.0",
+    "grunt": "^1.0.1",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-clean": "^1.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-ts": "^6.0.0-beta.3",
+    "load-grunt-tasks": "^3.5.2",
+    "typescript": "^2.1.4"
+  },
+  "dependencies": {},
+  "keywords": [
+    "wait",
+    "async",
+    "promise",
+    "cycle",
+    "dependency",
+    "dependencies"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stewartml/wait-for-dependencies.git"
+  },
+  "bugs": {
+    "url": "https://github.com/stewartml/wait-for-dependencies/issues"
+  },
+  "homepage": "https://github.com/stewartml/wait-for-dependencies#readme"
+}
