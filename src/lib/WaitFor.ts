@@ -19,6 +19,14 @@ class Deferred<T> {
 
 
 /**
+ * Basically a curried WaitFor.waitFor
+ */
+export interface Waiter<T> {
+  (...dependencies: T[]): Promise<any[]>
+};
+
+
+/**
  * Waits for dependencies.
  */
 export default class WaitFor<T> {
@@ -34,7 +42,7 @@ export default class WaitFor<T> {
   /**
    * Wait for the specified dependencies.
    * @param id the ID of the waiting task
-   * @param dependencies a list of IDs to wait on
+   * @param dependencies an array of IDs to wait on
    */
   waitFor(id: T, dependencies: T[]) {
     let node: DependencyNode<T> = {dependencies};
@@ -50,6 +58,30 @@ export default class WaitFor<T> {
     }
 
     return Promise.all(promises);
+  }
+
+
+  /**
+   * Gets a Waiter for the specified task.
+   * @param id the ID of the waiting task
+   */
+  getWaiter(id: T): Waiter<T> {
+    return (...dependencies: T[]) => this.waitFor(id, dependencies);
+  }
+
+
+  /**
+   * Maps over a list of items
+   * @param items the items to map
+   * @param mapFn the map function to use - it is passed the item, a Waiter for the item, and the index
+   */
+  map<V>(items: T[], mapFn: (t: T, wait?: Waiter<T>, i?: number) => Promise<V>): Promise<V[]> {
+    return Promise.all(
+      items.map(
+        (item, i) => mapFn(item, this.getWaiter(item), i)
+          .then((r) => (this.ready(item), r))
+      )
+    );
   }
 
   
@@ -97,5 +129,20 @@ export default class WaitFor<T> {
     }
 
     return false;
+  }
+};
+
+
+/**
+ * Specialised case of WaitFor<Function>
+ */
+export class WaitForFunction extends WaitFor<Function> {
+  /**
+   * Runs the array of functions, passing each one any `args` and a Waiter as the final argument.
+   * @param funcs 
+   * @param args 
+   */
+  run(funcs: Function[], ...args: any[]) {
+    return this.map(funcs, (fn, wait) => Promise.resolve(fn(...args, wait)));
   }
 };
