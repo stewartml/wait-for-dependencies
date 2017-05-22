@@ -51,10 +51,12 @@ export enum StallDetection {
 export default class WaitFor<T> {
   private dependencies: Map<T, DependencyNode<T>>;
   private deferreds: Map<T, Deferred<any>>;
+  stalled: Set<T>;
 
   constructor(private stallDetection: StallDetection = StallDetection.throw) {
     this.dependencies = new Map<T, DependencyNode<T>>();
     this.deferreds = new Map<T, Deferred<any>>();
+    this.stalled = new Set<T>();
   }
 
 
@@ -97,7 +99,11 @@ export default class WaitFor<T> {
   map<V>(items: T[], mapFn: (t: T, wait?: Waiter<T>, i?: number) => Promise<V>): Promise<V[]> {
     const promises = items.map(
       (item, i) => mapFn(item, this.getWaiter(item), i)
-        .then((r) => (this.ready(item), r))
+        .then((r) => {
+          this.ready(item);
+          this.stalled.delete(item);
+          return r;
+        })
     );
 
     if (this.stallDetection !== StallDetection.none) {
@@ -122,6 +128,7 @@ export default class WaitFor<T> {
           stalled.map(getName)));
       
       } else {
+        stalled.forEach((id) => this.stalled.add(id));
         return Promise.all(done);
       }
 

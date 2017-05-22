@@ -51,14 +51,19 @@ test('it throws on unknown dependency', async (t) => {
 test('it can resolve with an unknown dependency', async (t) => {
   let w = new WaitForFunction(StallDetection.filter);
   
+  async function task1(wait: Waiter<Function>) {
+    await wait(() => {});
+  }
+
   await w.run([
-    async (wait: Waiter<Function>) => {
-      await wait(() => {});
-    },
+    task1,
 
     async () => {
       await Promise.resolve(null);
     }
   ]);
+
+  t.is(w.stalled.size, 1);
+  t.true(w.stalled.has(task1));
 });
 
