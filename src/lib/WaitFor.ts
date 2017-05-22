@@ -27,13 +27,32 @@ export interface Waiter<T> {
 
 
 /**
+ * Determines how map should treat waiting on unknown items.
+ */
+export enum StallDetection {
+  /**
+   * An exception should be thrown if there are items waiting on unknown items.
+   */
+  throw,
+  /**
+   * The items with unknown dependencies should be filtered out of the await.
+   */
+  filter,
+  /**
+   * No stall detection should be done.
+   */
+  none
+}
+
+
+/**
  * Waits for dependencies.
  */
 export default class WaitFor<T> {
   private dependencies: Map<T, DependencyNode<T>>;
   private deferreds: Map<T, Deferred<any>>;
 
-  constructor() {
+  constructor(private stallDetection: StallDetection = StallDetection.throw) {
     this.dependencies = new Map<T, DependencyNode<T>>();
     this.deferreds = new Map<T, Deferred<any>>();
   }
@@ -49,7 +68,7 @@ export default class WaitFor<T> {
     this.dependencies.set(id, node);
 
     if (this._checkForCycle(id))
-      throw new Error('dependency cycle detected');
+      throw new Error(`dependency cycle detected in ${getName(id)}`);
 
     let promises = [];
 
@@ -76,12 +95,39 @@ export default class WaitFor<T> {
    * @param mapFn the map function to use - it is passed the item, a Waiter for the item, and the index
    */
   map<V>(items: T[], mapFn: (t: T, wait?: Waiter<T>, i?: number) => Promise<V>): Promise<V[]> {
-    return Promise.all(
-      items.map(
-        (item, i) => mapFn(item, this.getWaiter(item), i)
-          .then((r) => (this.ready(item), r))
-      )
+    const promises = items.map(
+      (item, i) => mapFn(item, this.getWaiter(item), i)
+        .then((r) => (this.ready(item), r))
     );
+
+    if (this.stallDetection !== StallDetection.none) {
+      const stalled = [], done = [];
+      const set = new Set(items);
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const promise = promises[i];
+        const deps = this.dependencies.get(item);
+
+        if (deps && deps.dependencies.filter((x) => !set.has(x)).length) {
+          stalled.push(item);
+
+        } else {
+          done.push(promise);
+        }
+      }
+
+      if (this.stallDetection === StallDetection.throw && stalled.length) {
+        return Promise.reject(new Error('Tasks with unknown dependencies: ' +
+          stalled.map(getName)));
+      
+      } else {
+        return Promise.all(done);
+      }
+
+    } else {
+      return Promise.all(promises);
+    }
   }
 
   
@@ -146,3 +192,8 @@ export class WaitForFunction extends WaitFor<Function> {
     return this.map(funcs, (fn, wait) => Promise.resolve(fn(...args, wait)));
   }
 };
+
+
+function getName(id) {
+  return id.displayName || id.name || id.toString();
+}

@@ -61,6 +61,19 @@ Some of the boilerplate is handled for you.
 
 ## API
 
+#### `WaitFor<T>#constructor(stallDetection: StallDetection = StallDetection.throw)`
+
+The `stallDetection` parameter guides what to do if a task waits on an unknown task.
+See `map` for details.
+
+#### `map<V>(items: T[], mapFn: (t: T, wait?: Waiter<T>, i?: number) => Promise<V>): Promise<V[]>`
+
+Maps over an array of items.  The `stallDetection` parameter passed to the constructor
+guides what to do if a task waits on an unknown task.  That is, for each call to `map`,
+if any task waits on an item not given in the `items` parameter, whether to throw
+an `Error`, remove the promise from the result value, or not bother trying to detect
+such an occurence.
+
 #### `WaitFor<T>#waitFor(id: T, dependencies: T[])`
 
 Waits for the specified list of dependencies.  The waiting task's own ID has to be passed
